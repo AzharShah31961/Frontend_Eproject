@@ -1,0 +1,17 @@
+/* custom-toast.css */
+
+.toast-success {
+  background-color: #28a745; /* Green for success */
+  color: white;
+  font-weight: bold;
+}
+
+.toast-error {
+  background-color: #dc3545; /* Red for error */
+  color: white;
+  font-weight: bold;
+}
+
+.toast-container {
+  z-index: 9999 !important; /* Ensures the toast appears above other content */
+}
