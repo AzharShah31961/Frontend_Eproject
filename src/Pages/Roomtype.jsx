@@ -206,10 +206,28 @@ const updateRoomtype = async (e) => {
       <div className="card mb-3" id="roomtypesTable">
         <div className="card-header">
           <div className="row flex-between-center">
-            <div className="col-4 col-sm-auto d-flex align-items-center pe-0">
+            <div className="col-3 col-sm-auto d-flex align-items-center pe-0">
               <h5 className="fs-9 mb-0 text-nowrap py-2 py-xl-0">Roomtypes</h5>
             </div>
-            <div className="col-8 col-sm-auto ms-auto text-end ps-0">
+            <div
+              className="col-3 col-sm-auto ms-auto text-end ps-0 d-none d-sm-inline-block ms-1 search-box"
+              data-list='{"valueNames":["title"]}'
+            >
+              <form
+                className="position-relative"
+                data-bs-toggle="search"
+                data-bs-display="static"
+              >
+                <input
+                  className="form-control search-input fuzzy-search"
+                  type="search"
+                  placeholder="Search..."
+                  aria-label="Search"
+                />
+                <span className="fas fa-search search-box-icon" />
+              </form>
+            </div>
+            <div className="col-3 col-sm-auto ms-auto text-end ps-0">
               <button
                 className="btn btn-falcon-default btn-sm"
                 type="button"

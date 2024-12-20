@@ -17,7 +17,6 @@ const Feedbackread = () => {
     guest: "",
     message: "", // Add 'type' here if it’s being used
   });
- 
 
   // Fetch feedback items data
   const fetchFeedbackItems = async () => {
@@ -45,14 +44,14 @@ const Feedbackread = () => {
       toast.error("Failed to load guest data.");
     }
   };
- const handleGuestChange = (selectedOption) => {
-   // selectedOption should contain both the guest's email and ID
-   setFeedbackData({
-     ...feedbackData,
-     guestEmail: selectedOption.email, // Store email or any other identifying attribute
-     guestId: selectedOption.id, // Store guest ID here
-   });
- };
+  const handleGuestChange = (selectedOption) => {
+    // selectedOption should contain both the guest's email and ID
+    setFeedbackData({
+      ...feedbackData,
+      guestEmail: selectedOption.email, // Store email or any other identifying attribute
+      guestId: selectedOption.id, // Store guest ID here
+    });
+  };
   useEffect(() => {
     fetchFeedbackItems();
     fetchGuests(); // Fetch guest options on component mount
@@ -64,102 +63,95 @@ const Feedbackread = () => {
     setFeedbackData({ ...feedbackData, [name]: value });
   };
 
-  
-
   // Submit to add new feedback item
-const handleAddFeedback = async (e) => {
-  e.preventDefault();
+  const handleAddFeedback = async (e) => {
+    e.preventDefault();
 
-  try {
-    // Assume feedbackData.guestEmail has the selected guest's email or ID.
-    const guestEmail = feedbackData.guestEmail;
+    try {
+      // Assume feedbackData.guestEmail has the selected guest's email or ID.
+      const guestEmail = feedbackData.guestEmail;
 
-    // If the guest email is provided, directly use it in the feedback submission
-    if (!guestEmail) {
-      toast.error("Please select a valid guest!");
-      return;
+      // If the guest email is provided, directly use it in the feedback submission
+      if (!guestEmail) {
+        toast.error("Please select a valid guest!");
+        return;
+      }
+
+      // Assuming the guest email is valid and you have a guest ID already available
+      const guestId = feedbackData.guestId; // You can store guestId when the user selects a guest
+
+      if (!guestId) {
+        toast.error("Guest ID is missing!");
+        return;
+      }
+
+      // Prepare the data for feedback submission
+      const feedbackDataWithGuestId = {
+        guest: guestId, // Use the guest ID directly
+        message: feedbackData.message,
+      };
+
+      // Send feedback data with guest ID
+      await axios.post(
+        "http://localhost:5000/api/feedback/create",
+        feedbackDataWithGuestId
+      );
+
+      toast.success("Feedback added successfully!");
+
+      // Reset form and refresh the feedback list
+      setFeedbackData({ guestEmail: "", guestId: "", message: "" });
+      fetchFeedbackItems();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error:", error); // Log the error object
+      toast.error("Failed to add feedback.");
     }
+  };
 
-    // Assuming the guest email is valid and you have a guest ID already available
-    const guestId = feedbackData.guestId; // You can store guestId when the user selects a guest
+  const handleUpdateFeedback = async (e) => {
+    e.preventDefault();
 
-    if (!guestId) {
-      toast.error("Guest ID is missing!");
-      return;
+    try {
+      // Fetch guest by email
+      const response = await axios.get(
+        `http://localhost:5000/api/guest/email/${feedbackData.guestEmail}`
+      );
+
+      // Check if the guest exists
+      if (!response.data._id) {
+        toast.error("Invalid email address or guest not found!");
+        return;
+      }
+
+      // Prepare the updated data with guest ID
+      const { _id, __v, ...updatedData } = feedbackData; // Exclude unnecessary fields
+      const updatedDataWithGuestId = {
+        ...updatedData,
+        guest: response.data._id, // Assign guest ID to the feedback
+      };
+
+      // Send request to the server to update the feedback item
+      await axios.put(
+        `http://localhost:5000/api/feedback/update/${_id}`,
+        updatedDataWithGuestId
+      );
+
+      toast.success("Feedback updated successfully!");
+
+      // Reset the form fields
+      setFeedbackData({ guestEmail: "", message: "" });
+
+      // Refresh the feedback items list
+      fetchFeedbackItems();
+
+      // Close the modal
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error updating feedback item:", error);
+      toast.error("Failed to update feedback item.");
     }
-
-    // Prepare the data for feedback submission
-    const feedbackDataWithGuestId = {
-      guest: guestId, // Use the guest ID directly
-      message: feedbackData.message,
-    };
-
-    // Send feedback data with guest ID
-    await axios.post(
-      "http://localhost:5000/api/feedback/create",
-      feedbackDataWithGuestId
-    );
-
-    toast.success("Feedback added successfully!");
-
-    // Reset form and refresh the feedback list
-    setFeedbackData({ guestEmail: "", guestId: "", message: "" });
-    fetchFeedbackItems();
-    setIsModalOpen(false);
-  } catch (error) {
-    console.error("Error:", error); // Log the error object
-    toast.error("Failed to add feedback.");
-  }
-};
-
-
-
-
-
- const handleUpdateFeedback = async (e) => {
-   e.preventDefault();
-
-   try {
-     // Fetch guest by email
-     const response = await axios.get(
-       `http://localhost:5000/api/guest/email/${feedbackData.guestEmail}`
-     );
-
-     // Check if the guest exists
-     if (!response.data._id) {
-       toast.error("Invalid email address or guest not found!");
-       return;
-     }
-
-     // Prepare the updated data with guest ID
-     const { _id, __v, ...updatedData } = feedbackData; // Exclude unnecessary fields
-     const updatedDataWithGuestId = {
-       ...updatedData,
-       guest: response.data._id, // Assign guest ID to the feedback
-     };
-
-     // Send request to the server to update the feedback item
-     await axios.put(
-       `http://localhost:5000/api/feedback/update/${_id}`,
-       updatedDataWithGuestId
-     );
-
-     toast.success("Feedback updated successfully!");
-
-     // Reset the form fields
-     setFeedbackData({ guestEmail: "", message: "" });
-
-     // Refresh the feedback items list
-     fetchFeedbackItems();
-
-     // Close the modal
-     setIsModalOpen(false);
-   } catch (error) {
-     console.error("Error updating feedback item:", error);
-     toast.error("Failed to update feedback item.");
-   }
- };
-
+  };
 
   // Handle delete
   const handleDelete = async (feedbackId) => {
@@ -204,10 +196,28 @@ const handleAddFeedback = async (e) => {
       <div className="card mb-3" id="feedbackTable">
         <div className="card-header">
           <div className="row flex-between-center">
-            <div className="col-4 col-sm-auto d-flex align-items-center pe-0">
+            <div className="col-3 col-sm-auto d-flex align-items-center pe-0">
               <h5 className="fs-9 mb-0 text-nowrap py-2 py-xl-0">Feedback</h5>
             </div>
-            <div className="col-8 col-sm-auto ms-auto text-end ps-0">
+            <div
+              className="col-3 col-sm-auto ms-auto text-end ps-0 d-none d-sm-inline-block ms-1 search-box"
+              data-list='{"valueNames":["title"]}'
+            >
+              <form
+                className="position-relative"
+                data-bs-toggle="search"
+                data-bs-display="static"
+              >
+                <input
+                  className="form-control search-input fuzzy-search"
+                  type="search"
+                  placeholder="Search..."
+                  aria-label="Search"
+                />
+                <span className="fas fa-search search-box-icon" />
+              </form>
+            </div>
+            <div className="col-3 col-sm-auto ms-auto text-end ps-0">
               <button
                 className="btn btn-falcon-default btn-sm"
                 type="button"

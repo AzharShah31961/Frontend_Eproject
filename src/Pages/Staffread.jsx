@@ -63,170 +63,164 @@ const Staffread = () => {
   }, []);
 
   // Handling form field changes
-const handleChange = (e) => {
-  const { name, value } = e.target;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-  if (name === "phone") {
-    // Allow only numeric values
-    let numericValue = value.replace(/\D/g, ""); // Remove non-numeric characters
-    if (numericValue.length > 11) numericValue = numericValue.slice(0, 11); // Restrict to 11 digits
-    setStaffData({ ...staffData, phone: numericValue });
-    return;
-  }
-
-  // For CNIC and Phone validation
-  if ((name === "cnic" || name === "phone") && !/^\d*$/.test(value)) return;
-
-  // Restrict CNIC and Phone length
-  if (name === "cnic" && value.length > 13) return;
-  if (name === "phone" && value.length > 11) return;
-
-  // For role dropdown: Allow updating only if a new value is selected
-  if (name === "role" && value === "") return;
-
-  setStaffData({ ...staffData, [name]: value });
-};
-
-  // Adding staff with validation
-const addStaff = async (e) => {
-  e.preventDefault();
-
-  // Validation for CNIC and Phone
-  if (!/^\d{13}$/.test(staffData.cnic)) {
-    toast.error("CNIC must be exactly 13 digits and numeric.");
-    return;
-  }
-
-  // Ensure phone number starts with "03" and has exactly 11 digits
-  if (!/^03\d{9}$/.test(staffData.phone)) {
-    toast.error("Phone number must start with '03' and be exactly 11 digits.");
-    return;
-  }
-
-  try {
-    await axios.post("http://localhost:5000/api/staff/create", staffData);
-    toast.success("Staff created successfully!");
-    fetchStaff();
-    setStaffData({
-      username: "",
-      email: "",
-      phone: "",
-      cnic: "",
-      password: "",
-      role: "",
-    });
-    setIsModalOpen(false);
-  } catch (error) {
-    console.error("Error creating staff:", error);
-
-    // Handle server-side errors
-    const errors = error.response?.data?.errors;
-    if (errors) {
-      Object.keys(errors).forEach((field) => {
-        toast.error(errors[field]); // Show each field error
-      });
-    } else {
-      toast.error(
-        error.response?.data?.message ||
-        "An unexpected error occurred while creating the staff."
-      );
-    }
-  }
-};
-
-  
- // Updating staff with validation
- const updateStaff = async (e) => {
-  e.preventDefault();
-
-  // Validation for CNIC and Phone
-  if (!/^\d{13}$/.test(staffData.cnic)) {
-    toast.error("CNIC must be exactly 13 digits and numeric.");
-    return;
-  }
-
-  // Ensure phone number starts with "03" and has exactly 11 digits
-  if (!/^03\d{9}$/.test(staffData.phone)) {
-    toast.error("Phone number must start with '03' and be exactly 11 digits.");
-    return;
-  }
-
-  const { _id, __v, ...staffUpdateData } = staffData;
-
-  // If role is changing, check the role limits
-  const roleChanged = staffData.role !== currentRole;
-
-  if (roleChanged) {
-    // Count current members with the selected role
-    const roleCount = staff.filter(
-      (member) => member.role?.name === staffData.role
-    ).length;
-
-    // Define a limit for each role
-    const roleLimits = {
-      manager: 2, // Example: max 2 managers
-      employee: 5, // Example: max 5 employees
-    };
-
-    // Check if the limit for the selected role has been reached or not
-    if (roleCount >= (roleLimits[staffData.role.toLowerCase()] || Infinity)) {
-      toast.error(`The limit for the role "${staffData.role}" has been surpassed.`);
+    if (name === "phone") {
+      // Allow only numeric values
+      let numericValue = value.replace(/\D/g, ""); // Remove non-numeric characters
+      if (numericValue.length > 11) numericValue = numericValue.slice(0, 11); // Restrict to 11 digits
+      setStaffData({ ...staffData, phone: numericValue });
       return;
     }
-    if (roleCount === roleLimits[staffData.role.toLowerCase()]) {
-      toast.info(`The role "${staffData.role}" limit has been reached but update is allowed.`);
+
+    // For CNIC and Phone validation
+    if ((name === "cnic" || name === "phone") && !/^\d*$/.test(value)) return;
+
+    // Restrict CNIC and Phone length
+    if (name === "cnic" && value.length > 13) return;
+    if (name === "phone" && value.length > 11) return;
+
+    // For role dropdown: Allow updating only if a new value is selected
+    if (name === "role" && value === "") return;
+
+    setStaffData({ ...staffData, [name]: value });
+  };
+
+  // Adding staff with validation
+  const addStaff = async (e) => {
+    e.preventDefault();
+
+    // Validation for CNIC and Phone
+    if (!/^\d{13}$/.test(staffData.cnic)) {
+      toast.error("CNIC must be exactly 13 digits and numeric.");
+      return;
     }
-  }
 
-  try {
-    const response = await axios.put(
-      `http://localhost:5000/api/staff/update/${_id}`,
-      staffUpdateData
-    );
-    toast.success("Staff updated successfully!");
-
-    // Refresh staff data
-    fetchStaff();
-
-    // Reset form fields after successful update
-    setStaffData({
-      username: "",
-      email: "",
-      phone: "",
-      cnic: "",
-      password: "",
-      role: "",
-    });
-
-    // Close modal after updating
-    setIsModalOpen(false);
-  } catch (error) {
-    console.error("Error updating staff:", error);
-
-    // Handle server-side errors
-    const errors = error.response?.data?.errors;
-    if (errors) {
-      Object.keys(errors).forEach((field) => {
-        toast.error(errors[field]); // Show each field error
-      });
-    } else {
+    // Ensure phone number starts with "03" and has exactly 11 digits
+    if (!/^03\d{9}$/.test(staffData.phone)) {
       toast.error(
-        error.response?.data?.message ||
-        "An unexpected error occurred while updating the staff."
+        "Phone number must start with '03' and be exactly 11 digits."
       );
+      return;
     }
-  }
-};
-  
-  
 
+    try {
+      await axios.post("http://localhost:5000/api/staff/create", staffData);
+      toast.success("Staff created successfully!");
+      fetchStaff();
+      setStaffData({
+        username: "",
+        email: "",
+        phone: "",
+        cnic: "",
+        password: "",
+        role: "",
+      });
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error creating staff:", error);
 
+      // Handle server-side errors
+      const errors = error.response?.data?.errors;
+      if (errors) {
+        Object.keys(errors).forEach((field) => {
+          toast.error(errors[field]); // Show each field error
+        });
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            "An unexpected error occurred while creating the staff."
+        );
+      }
+    }
+  };
 
+  // Updating staff with validation
+  const updateStaff = async (e) => {
+    e.preventDefault();
 
+    // Validation for CNIC and Phone
+    if (!/^\d{13}$/.test(staffData.cnic)) {
+      toast.error("CNIC must be exactly 13 digits and numeric.");
+      return;
+    }
 
+    if (!/^03\d{9}$/.test(staffData.phone)) {
+      toast.error(
+        "Phone number must start with '03' and be exactly 11 digits."
+      );
+      return;
+    }
 
+    const { _id, __v, ...staffUpdateData } = staffData;
 
+    // Check if role is being changed
+    const roleChanged = staffData.role !== currentRole;
 
+    if (roleChanged) {
+      // Count the current members with the selected role
+      const roleCount = staff.filter(
+        (member) => member.role?.name === staffData.role
+      ).length;
+
+      // Define role limits
+      const roleLimits = {
+        manager: 2, // Example: max 2 managers
+        employee: 5, // Example: max 5 employees
+      };
+
+      const roleLimit = roleLimits[staffData.role.toLowerCase()] || Infinity;
+
+      // If the limit for the selected role is reached, block the update
+      if (roleCount >= roleLimit) {
+        toast.error(
+          `The limit for the role "${staffData.role}" has been reached.`
+        );
+        return;
+      }
+    }
+
+    try {
+      // Proceed to update staff data
+      const response = await axios.put(
+        `http://localhost:5000/api/staff/update/${_id}`,
+        staffUpdateData
+      );
+      toast.success("Staff updated successfully!");
+
+      // Refresh staff data
+      fetchStaff();
+
+      // Reset form fields
+      setStaffData({
+        username: "",
+        email: "",
+        phone: "",
+        cnic: "",
+        password: "",
+        role: "",
+      });
+
+      // Close modal
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error updating staff:", error);
+
+      // Handle server-side errors
+      const errors = error.response?.data?.errors;
+      if (errors) {
+        Object.keys(errors).forEach((field) => {
+          toast.error(errors[field]);
+        });
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            "An unexpected error occurred while updating the staff."
+        );
+      }
+    }
+  };
 
   // Delete staff
   const handleDelete = async (staffId) => {
@@ -311,6 +305,24 @@ const addStaff = async (e) => {
           <div className="row flex-between-center">
             <div className="col-4 col-sm-auto d-flex align-items-center pe-0">
               <h5 className="fs-9 mb-0 text-nowrap py-2 py-xl-0">Staff</h5>
+            </div>
+            <div
+              className="col-3 col-sm-auto ms-auto text-end ps-0 d-none d-sm-inline-block ms-1 search-box"
+              data-list='{"valueNames":["title"]}'
+            >
+              <form
+                className="position-relative"
+                data-bs-toggle="search"
+                data-bs-display="static"
+              >
+                <input
+                  className="form-control search-input fuzzy-search"
+                  type="search"
+                  placeholder="Search..."
+                  aria-label="Search"
+                />
+                <span className="fas fa-search search-box-icon" />
+              </form>
             </div>
             <div className="col-8 col-sm-auto ms-auto text-end ps-0">
               <button

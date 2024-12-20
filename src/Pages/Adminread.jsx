@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 const Adminread = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const [userData, setUserData] = useState({
     _id: "",
     username: "",
@@ -34,7 +35,6 @@ const Adminread = () => {
     fetchUsers();
   }, []);
 
-  // Handle input changes0
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,6 +69,7 @@ const Adminread = () => {
   const isUniquePhoneNumber = (phone, userId) => {
     return !users.some((user) => user.phone === phone && user._id !== userId);
   };
+
   // Check for duplicate username in users list
   const isUniqueUsername = (username, userId) => {
     return !users.some(
@@ -129,7 +130,6 @@ const Adminread = () => {
   };
 
   // Handle Update Admin with validation
-
   const handleUpdateAdmin = async (e) => {
     e.preventDefault();
 
@@ -220,21 +220,57 @@ const Adminread = () => {
     setIsViewModalOpen(true);
   };
 
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Filter users based on search term
+  const filteredUsers = users.filter((user) => {
+    const searchQuery = searchTerm.toLowerCase();
+    return (
+      user.username.toLowerCase().includes(searchQuery) ||
+      user.email.toLowerCase().includes(searchQuery) ||
+      user.phone.includes(searchQuery)
+    );
+  });
+
   return (
     <>
       <div className="card mb-3" id="ordersTable">
         <div className="card-header">
           <div className="row flex-between-center">
-            <div className="col-4 col-sm-auto d-flex align-items-center pe-0">
+            <div className="col-3 col-sm-auto d-flex align-items-center pe-0">
               <h5 className="fs-9 mb-0 text-nowrap py-2 py-xl-0">Admin</h5>
             </div>
-            <div className="col-8 col-sm-auto ms-auto text-end ps-0">
+            <div
+              className="col-3 d-none col-sm-auto ms-auto text-end  d-sm-inline-block ms-1 search-box"
+              data-list='{"valueNames":["title"]}'
+            >
+              <form
+                className="position-relative"
+                data-bs-toggle="search"
+                data-bs-display="static"
+              >
+                <input
+                  className="form-control search-input fuzzy-search"
+                  type="search"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  aria-label="Search"
+                />
+                <span className="fas fa-search search-box-icon" />
+              </form>
+            </div>
+            <div className="col-3 col-sm-auto ms-auto text-end ps-0">
               <button
                 className="btn btn-falcon-default btn-sm"
                 type="button"
                 onClick={openAddModal}
               >
                 <span className="fas fa-plus" />
+
                 <span className="d-none d-sm-inline-block ms-1">New</span>
               </button>
             </div>
@@ -257,12 +293,12 @@ const Adminread = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="5" className="text-center">
+                    <td colSpan="6" className="text-center">
                       Loading...
                     </td>
                   </tr>
-                ) : users.length > 0 ? (
-                  users.map((user, index) => (
+                ) : filteredUsers.length > 0 ? (
+                  filteredUsers.map((user, index) => (
                     <tr key={user._id}>
                       <td>{index + 1}</td>
                       <td>{user.username}</td>
@@ -293,20 +329,22 @@ const Adminread = () => {
                             <div className="py-2">
                               <Link
                                 className="dropdown-item"
-                                onClick={() => openUpdateModal(user)} // Open update modal
-                              >
-                                Update
-                              </Link>
-                              <Link
-                                className="dropdown-item"
                                 onClick={() => openViewModal(user)}
+                                to="#"
                               >
                                 View
                               </Link>
-                              <div className="dropdown-divider"></div>
                               <Link
-                                className="dropdown-item text-danger"
-                                onClick={() => handleDelete(user._id)} // Delete user on click
+                                className="dropdown-item"
+                                onClick={() => openUpdateModal(user)}
+                                to="#"
+                              >
+                                Edit
+                              </Link>
+                              <Link
+                                className="dropdown-item"
+                                onClick={() => handleDelete(user._id)}
+                                to="#"
                               >
                                 Delete
                               </Link>
@@ -318,8 +356,8 @@ const Adminread = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="text-center">
-                      No users found.
+                    <td colSpan="6" className="text-center">
+                      No records found
                     </td>
                   </tr>
                 )}
@@ -329,20 +367,29 @@ const Adminread = () => {
         </div>
       </div>
 
-      {/* Add/Update Modal */}
+      {/* Modal for Add/Update Admin */}
       {isModalOpen && (
-        <div className="modal fade show" style={{ display: "block" }}>
-          <div className="modal-dialog">
+        <div
+          className="modal fade show"
+          id="adminModal"
+          style={{ display: "block" }}
+          tabIndex="-1"
+          aria-labelledby="adminModalLabel"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">
-                  {isUpdate ? "Update Admin" : "Add New Admin"}
+                <h5 className="modal-title" id="adminModalLabel">
+                  {isUpdate ? "Update Admin" : "Add Admin"}
                 </h5>
                 <button
                   type="button"
                   className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
                   onClick={() => setIsModalOpen(false)}
-                ></button>
+                />
               </div>
               <div className="modal-body">
                 <form onSubmit={isUpdate ? handleUpdateAdmin : handleAddAdmin}>
@@ -385,28 +432,37 @@ const Adminread = () => {
                       name="phone"
                       value={userData.phone}
                       onChange={handleChange}
+                      maxLength="11"
                       required
                     />
                   </div>
-                  {!isUpdate && (
-                    <div className="mb-3">
-                      <label htmlFor="password" className="form-label">
-                        Password
-                      </label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        id="password"
-                        name="password"
-                        value={userData.password}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                  )}
-                  <button type="submit" className="btn btn-primary">
-                    {isUpdate ? "Update Admin" : "Add Admin"}
-                  </button>
+                  <div className="mb-3">
+                    <label htmlFor="password" className="form-label">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="password"
+                      name="password"
+                      value={userData.password}
+                      onChange={handleChange}
+                      required={!isUpdate}
+                    />
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      Close
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      {isUpdate ? "Update" : "Add"}
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
@@ -414,18 +470,29 @@ const Adminread = () => {
         </div>
       )}
 
-      {/* View Modal */}
+      {/* Modal for View Admin */}
       {isViewModalOpen && (
-        <div className="modal fade show" style={{ display: "block" }}>
-          <div className="modal-dialog">
+        <div
+          className="modal fade show"
+          id="viewAdminModal"
+          style={{ display: "block" }}
+          tabIndex="-1"
+          aria-labelledby="viewAdminModalLabel"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">View Admin Details</h5>
+                <h5 className="modal-title" id="viewAdminModalLabel">
+                  View Admin Details
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
                   onClick={() => setIsViewModalOpen(false)}
-                ></button>
+                />
               </div>
               <div className="modal-body">
                 <p>
@@ -437,13 +504,27 @@ const Adminread = () => {
                 <p>
                   <strong>Phone:</strong> {userData.phone}
                 </p>
+                <p>
+                  <strong>Status:</strong> Active
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                  onClick={() => setIsViewModalOpen(false)}
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <ToastContainer position="top-center" autoClose={3000} />
+      {/* Toast container */}
+      <ToastContainer />
     </>
   );
 };

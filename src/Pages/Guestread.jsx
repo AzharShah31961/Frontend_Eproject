@@ -40,11 +40,7 @@ const Guestread = () => {
 
     if (name === "phone") {
       // Allow only numbers and ensure phone starts with "03"
-      if (
-        !/^\d*$/.test(value) ||
-        value.length > 11 ||
-        (value.length === 2 && value !== "03")
-      ) {
+      if (!/^\d*$/.test(value) || value.length > 11) {
         return;
       }
     }
@@ -75,7 +71,6 @@ const Guestread = () => {
 
   const validatePhone = (phone) => {
     if (!/^\d{11}$/.test(phone) || !phone.startsWith("03")) {
-      toast.error("Phone number must be exactly 11 digits and start with '03'.");
       return false;
     }
     return true;
@@ -114,181 +109,199 @@ const Guestread = () => {
 
   // Add new guest
 
-// Add new guest
-let isErrorHandled = false;  // Flag to track if an error is already handled
+  // Add new guest
+  let isErrorHandled = false; // Flag to track if an error is already handled
 
-// Add new guest
-const addGuest = async (e) => {
-  e.preventDefault();
+  // Add new guest
+  const addGuest = async (e) => {
+    e.preventDefault();
 
-  let isValid = true;
+    let isValid = true;
 
-  // Reset error handled flag
-  isErrorHandled = false;
+    // Reset error handled flag
+    let isErrorHandled = false;
 
-  // Validate each field individually and show specific error messages
-  if (!validateName(guestData.name)) {
-    if (!isErrorHandled) {
-      toast.error("Name must contain only alphabets.");
-      isErrorHandled = true;  // Mark error as handled
-    }
-    isValid = false;
-  }
-  if (!validatePhone(guestData.phone)) {
-    if (!isErrorHandled) {
-      toast.error("Phone number must be exactly 11 digits and start with '03'.");
-      isErrorHandled = true;  // Mark error as handled
-    }
-    isValid = false;
-  }
-  if (!validateEmail(guestData.email)) {
-    if (!isErrorHandled) {
-      toast.error("Invalid email format.");
-      isErrorHandled = true;  // Mark error as handled
-    }
-    isValid = false;
-  }
-  if (!validateDocumentNumber(guestData.documenttype, guestData.documentno)) {
-    if (!isErrorHandled) {
-      toast.error("Invalid document number or type.");
-      isErrorHandled = true;  // Mark error as handled
-    }
-    isValid = false;
-  }
-
-  if (!isValid) {
-    return; // Stop further execution if any field is invalid
-  }
-
-  // Convert email to lowercase without trimming
-  guestData.email = guestData.email.toLowerCase();
-
-  // Axios Request to add the guest
-  try {
-    const response = await axios.post(
-      "http://localhost:5000/api/guest/create",
-      guestData,
-      {
-        headers: { "Content-Type": "application/json" },
+    // Validate each field individually and show specific error messages
+    if (!validateName(guestData.name)) {
+      if (!isErrorHandled) {
+        toast.error("Name must contain only alphabets.");
+        isErrorHandled = true; // Mark error as handled
       }
+      isValid = false;
+    }
+    if (!validatePhone(guestData.phone)) {
+      if (!isErrorHandled) {
+        toast.error(
+          "Phone number must be exactly 11 digits and start with '03'."
+        );
+        isErrorHandled = true; // Mark error as handled
+      }
+      isValid = false;
+    }
+    if (!validateEmail(guestData.email)) {
+      if (!isErrorHandled) {
+        toast.error("Invalid email format.");
+        isErrorHandled = true; // Mark error as handled
+      }
+      isValid = false;
+    }
+    if (!validateDocumentNumber(guestData.documenttype, guestData.documentno)) {
+      if (!isErrorHandled) {
+        isErrorHandled = true; // Mark error as handled
+      }
+      isValid = false;
+    }
+
+    if (!isValid) {
+      return; // Stop further execution if any field is invalid
+    }
+
+    // Convert email and document number to lowercase
+    guestData.email = guestData.email.toLowerCase();
+    guestData.documentno = guestData.documentno.toLowerCase();
+
+    // Axios Request to add the guest
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/guest/create",
+        guestData,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      // Success toast
+      toast.success("Guest successfully created!");
+      fetchGuests();
+      setGuestData({
+        name: "",
+        email: "",
+        phone: "",
+        documenttype: "",
+        documentno: "",
+      });
+      setIsModalOpen(false);
+    } catch (error) {
+      // Handle duplicate email or document number error specifically
+      if (
+        error.response?.data?.message?.includes("E11000 duplicate key error") &&
+        !isErrorHandled
+      ) {
+        if (error.response?.data?.message?.includes("email")) {
+          toast.error("Email already exists.");
+        } else if (error.response?.data?.message?.includes("documentno")) {
+          toast.error("Document number already exists.");
+        }
+        isErrorHandled = true; // Mark error as handled
+        return; // Prevent any further execution for this error
+      } else if (!isErrorHandled) {
+        // For other errors, show the backend error message only once
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "An error occurred while creating the guest.";
+        toast.error(errorMessage);
+        isErrorHandled = true; // Mark error as handled
+      }
+      console.error("Error:", error.response?.data?.message || error.message);
+    }
+  };
+
+  const updateGuest = async (e) => {
+    e.preventDefault();
+
+    let isValid = true;
+    let isErrorHandled = false;
+
+    // Validate each field individually and show specific error messages
+    if (!validateName(guestData.name)) {
+      if (!isErrorHandled) {
+        toast.error("Name must contain only alphabets.");
+        isErrorHandled = true; // Mark error as handled
+      }
+      isValid = false;
+    }
+    if (!validatePhone(guestData.phone)) {
+      if (!isErrorHandled) {
+        toast.error(
+          "Phone number must be exactly 11 digits and start with '03'."
+        );
+        isErrorHandled = true; // Mark error as handled
+      }
+      isValid = false;
+    }
+    if (!validateEmail(guestData.email)) {
+      if (!isErrorHandled) {
+        toast.error("Invalid email format.");
+        isErrorHandled = true; // Mark error as handled
+      }
+      isValid = false;
+    }
+    if (!validateDocumentNumber(guestData.documenttype, guestData.documentno)) {
+      isValid = false;
+    }
+
+    if (!isValid) {
+      return; // Stop further execution if any field is invalid
+    }
+
+    // Convert email and document number to lowercase
+    guestData.email = guestData.email.toLowerCase();
+    guestData.documentno = guestData.documentno.toLowerCase();
+
+    // Check for duplicate email and document number in the frontend list (assumed `guests` is your array of all guests)
+    const duplicateEmail = guests.find(
+      (guest) => guest.email === guestData.email && guest._id !== guestData._id
     );
-    // Success toast
-    toast.success("Guest successfully created!");
-    fetchGuests();
-    setGuestData({
-      name: "",
-      email: "",
-      phone: "",
-      documenttype: "",
-      documentno: "",
-    });
-    setIsModalOpen(false);
-  } catch (error) {
-    // Handle duplicate email error specifically
-    if (error.response?.data?.message?.includes("E11000 duplicate key error") && !isErrorHandled) {
-      toast.error("Email already exists.");
-      isErrorHandled = true;  // Mark error as handled
-      return; // Prevent any further execution for this error
-    } else if (!isErrorHandled) {
-      // For other errors, show the backend error message only once
-      const errorMessage = error.response?.data?.message || error.message || "An error occurred while creating the guest.";
-      toast.error(errorMessage);
-      isErrorHandled = true;  // Mark error as handled
-    }
-    console.error("Error:", error.response?.data?.message || error.message);
-  }
-};
-
-
-
-
-const updateGuest = async (e) => {
-  e.preventDefault();
-
-  let isValid = true;
-
-  // Reset error handled flag
-  isErrorHandled = false;
-
-  // Validate each field individually and show specific error messages
-  if (!validateName(guestData.name)) {
-    if (!isErrorHandled) {
-      toast.error("Name must contain only alphabets.");
-      isErrorHandled = true;  // Mark error as handled
-    }
-    isValid = false;
-  }
-  if (!validatePhone(guestData.phone)) {
-    if (!isErrorHandled) {
-      toast.error("Phone number must be exactly 11 digits and start with '03'.");
-      isErrorHandled = true;  // Mark error as handled
-    }
-    isValid = false;
-  }
-  if (!validateEmail(guestData.email)) {
-    if (!isErrorHandled) {
-      toast.error("Invalid email format.");
-      isErrorHandled = true;  // Mark error as handled
-    }
-    isValid = false;
-  }
-  if (!validateDocumentNumber(guestData.documenttype, guestData.documentno)) {
-    if (!isErrorHandled) {
-      toast.error("Invalid document number or type.");
-      isErrorHandled = true;  // Mark error as handled
-    }
-    isValid = false;
-  }
-
-  if (!isValid) {
-    return; // Stop further execution if any field is invalid
-  }
-
-  // Convert email to lowercase without trimming
-  guestData.email = guestData.email.toLowerCase();
-
-  // Prepare data for the API request (exclude _id and __v)
-  const { _id, __v, ...guestUpdateData } = guestData;
-
-  // Make PUT request to update the guest data
-  try {
-    const response = await axios.put(
-      `http://localhost:5000/api/guest/update/${_id}`,
-      guestUpdateData
+    const duplicateDocument = guests.find(
+      (guest) =>
+        guest.documentno === guestData.documentno && guest._id !== guestData._id
     );
-    // Success toast
-    toast.success("Guest updated successfully!");
-    fetchGuests(); // Refresh the guest list
-    setGuestData({
-      name: "",
-      email: "",
-      phone: "",
-      documenttype: "",
-      documentno: "",
-    });
-    setIsModalOpen(false); // Close modal
-  } catch (error) {
-    // Handle duplicate email error specifically
-    if (error.response?.data?.message?.includes("E11000 duplicate key error") && !isErrorHandled) {
+
+    if (duplicateEmail) {
       toast.error("Email already exists.");
-      isErrorHandled = true;  // Mark error as handled
-      return; // Prevent further execution for this error
-    } else if (!isErrorHandled) {
-      // For other errors, show the backend error message only once
-      const errorMessage = error.response?.data?.message || error.message || "An error occurred while updating the guest.";
-      toast.error(errorMessage);
-      isErrorHandled = true;  // Mark error as handled
+      return;
     }
-    console.error("Error:", error.response?.data?.message || error.message);
-  }
-};
+    if (duplicateDocument) {
+      toast.error("Document number already exists.");
+      return;
+    }
 
+    // Prepare data for the API request (exclude _id and __v)
+    const { _id, __v, ...guestUpdateData } = guestData;
 
+    // Make PUT request to update the guest data
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/guest/update/${_id}`,
+        guestUpdateData,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-
-
-
-
+      // Success toast
+      toast.success("Guest updated successfully!");
+      fetchGuests(); // Refresh the guest list
+      setGuestData({
+        name: "",
+        email: "",
+        phone: "",
+        documenttype: "",
+        documentno: "",
+      });
+      setIsModalOpen(false); // Close modal
+    } catch (error) {
+      if (!isErrorHandled) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "An error occurred while updating the guest.";
+        toast.error(errorMessage);
+        isErrorHandled = true; // Mark error as handled
+      }
+      console.error("Error:", error.response?.data?.message || error.message);
+    }
+  };
 
   // Delete guest
   const handleDelete = async (guestId) => {
@@ -332,10 +345,28 @@ const updateGuest = async (e) => {
       <div className="card mb-3" id="guestTable">
         <div className="card-header">
           <div className="row flex-between-center">
-            <div className="col-4 col-sm-auto d-flex align-items-center pe-0">
+            <div className="col-3 col-sm-auto d-flex align-items-center pe-0">
               <h5 className="fs-9 mb-0 text-nowrap py-2 py-xl-0">Guests</h5>
             </div>
-            <div className="col-8 col-sm-auto ms-auto text-end ps-0">
+            <div
+              className="col-3 col-sm-auto ms-auto text-end ps-0 d-none d-sm-inline-block ms-1 search-box"
+              data-list='{"valueNames":["title"]}'
+            >
+              <form
+                className="position-relative"
+                data-bs-toggle="search"
+                data-bs-display="static"
+              >
+                <input
+                  className="form-control search-input fuzzy-search"
+                  type="search"
+                  placeholder="Search..."
+                  aria-label="Search"
+                />
+                <span className="fas fa-search search-box-icon" />
+              </form>
+            </div>
+            <div className="col-3 col-sm-auto ms-auto text-end ps-0">
               <button
                 className="btn btn-falcon-default btn-sm"
                 type="button"
