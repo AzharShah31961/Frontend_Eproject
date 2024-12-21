@@ -17,6 +17,23 @@ const Foodread = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // Add/Update modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false); // View modal
   const [isUpdate, setIsUpdate] = useState(false); // Track if the modal is for update
+  const [searchTerm, setSearchTerm] = useState(""); 
+
+
+
+   // Handle search input change
+   const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value.toLowerCase()); // Update search term and convert to lowercase for case-insensitive search
+  };
+
+  // Filter foods based on the search term
+  const filteredFoods = foods.filter(
+    (food) =>
+      food.name.toLowerCase().includes(searchTerm) ||
+      food.type.toLowerCase().includes(searchTerm) ||
+      food.price.toString().includes(searchTerm) ||
+      food.quantity.toString().includes(searchTerm)
+  );
 
   // Fetch foods data
   const fetchFoods = async () => {
@@ -210,6 +227,8 @@ const Foodread = () => {
                   type="search"
                   placeholder="Search..."
                   aria-label="Search"
+                  value={searchTerm}
+                  onChange={handleSearchChange} // Update search term
                 />
                 <span className="fas fa-search search-box-icon" />
               </form>
@@ -241,14 +260,14 @@ const Foodread = () => {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+              {loading ? (
                   <tr>
                     <td colSpan="6" className="text-center">
                       Loading...
                     </td>
                   </tr>
-                ) : foods.length > 0 ? (
-                  foods.map((food, index) => (
+                ) : filteredFoods.length > 0 ? (
+                  filteredFoods.map((food, index) => (
                     <tr key={food._id}>
                       <td>{index + 1}</td>
                       <td>{food.name}</td>
@@ -260,7 +279,7 @@ const Foodread = () => {
                           <button
                             className="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal"
                             type="button"
-                            id="food-dropdown-0"
+                            id={`food-dropdown-${index}`}
                             data-bs-toggle="dropdown"
                             aria-haspopup="true"
                             aria-expanded="false"
@@ -269,25 +288,32 @@ const Foodread = () => {
                           </button>
                           <div
                             className="dropdown-menu dropdown-menu-end border py-0"
-                            aria-labelledby="food-dropdown-0"
+                            aria-labelledby={`food-dropdown-${index}`}
                           >
                             <div className="py-2">
                               <Link
                                 className="dropdown-item"
-                                onClick={() => openUpdateModal(food)} // Open update modal
+                                onClick={() => {
+                                  setIsUpdate(true);
+                                  setFoodData(food);
+                                  setIsModalOpen(true);
+                                }}
                               >
                                 Update
                               </Link>
                               <Link
                                 className="dropdown-item"
-                                onClick={() => openViewModal(food)} // Open view modal
+                                onClick={() => {
+                                  setFoodData(food);
+                                  setIsViewModalOpen(true);
+                                }}
                               >
                                 View
                               </Link>
                               <div className="dropdown-divider"></div>
                               <Link
                                 className="dropdown-item text-danger"
-                                onClick={() => handleDelete(food._id)} // Delete food item
+                                onClick={() => handleDelete(food._id)}
                               >
                                 Delete
                               </Link>

@@ -18,6 +18,7 @@ const Guestread = () => {
   const [isUpdate, setIsUpdate] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch guests
   const fetchGuests = async () => {
@@ -34,6 +35,20 @@ const Guestread = () => {
   useEffect(() => {
     fetchGuests();
   }, []);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value.toLowerCase()); // Convert to lowercase for case-insensitive search
+  };
+
+  // Filter guests based on search term
+  const filteredGuests = guests.filter(
+    (guest) =>
+      guest.name.toLowerCase().includes(searchTerm) ||
+      guest.email.toLowerCase().includes(searchTerm) ||
+      guest.phone.includes(searchTerm) ||
+      guest.documenttype.toLowerCase().includes(searchTerm) ||
+      guest.documentno.toLowerCase().includes(searchTerm)
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -108,11 +123,8 @@ const Guestread = () => {
   };
 
   // Add new guest
-
-  // Add new guest
   let isErrorHandled = false; // Flag to track if an error is already handled
 
-  // Add new guest
   const addGuest = async (e) => {
     e.preventDefault();
 
@@ -336,10 +348,12 @@ const Guestread = () => {
     }
     setIsModalOpen(true); // Show modal
   };
+
   const openViewModal = (guest) => {
     setSelectedGuest(guest); // Set the selected guest for viewing
     setViewModalOpen(true); // Open the view modal
   };
+
   return (
     <>
       <div className="card mb-3" id="guestTable">
@@ -362,6 +376,8 @@ const Guestread = () => {
                   type="search"
                   placeholder="Search..."
                   aria-label="Search"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
                 />
                 <span className="fas fa-search search-box-icon" />
               </form>
@@ -399,8 +415,8 @@ const Guestread = () => {
                       Loading...
                     </td>
                   </tr>
-                ) : guests.length > 0 ? (
-                  guests.map((guest, index) => (
+                ) : filteredGuests.length > 0 ? (
+                  filteredGuests.map((guest, index) => (
                     <tr key={guest._id}>
                       <td>{index + 1}</td>
                       <td>{guest.name}</td>
@@ -436,7 +452,6 @@ const Guestread = () => {
                               <Link
                                 className="dropdown-item"
                                 onClick={() => openViewModal(guest)}
-                                // Open view modal
                               >
                                 View
                               </Link>
@@ -540,7 +555,7 @@ const Guestread = () => {
                     >
                       <option value="">Select Document Type</option>
                       <option value="passport">Passport</option>
-                      <option value="cnic">CNIC</option>
+                      <option value="cnic">CNIC </option>
                     </select>
                   </div>
                   <div className="mb-3">

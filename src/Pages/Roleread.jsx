@@ -15,7 +15,7 @@ const Roleread = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [viewRole, setViewRole] = useState(null); // State for viewing role details
-
+  const [searchTerm, setSearchTerm] = useState(""); 
   // Fetch roles from the backend
   const fetchRoles = async () => {
     try {
@@ -37,6 +37,14 @@ const Roleread = () => {
     const { name, value } = e.target;
     setRoleData({ ...roleData, [name]: value });
   };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const filteredRoles = roles.filter((role) =>
+    role.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Add new role
   const addRole = async (e) => {
@@ -206,6 +214,8 @@ const Roleread = () => {
                   type="search"
                   placeholder="Search..."
                   aria-label="Search"
+                  value={searchTerm}
+                onChange={handleSearchChange}
                 />
                 <span className="fas fa-search search-box-icon" />
               </form>
@@ -235,14 +245,14 @@ const Roleread = () => {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+              {loading ? (
                   <tr>
                     <td colSpan="5" className="text-center">
                       Loading...
                     </td>
                   </tr>
-                ) : roles.length > 0 ? (
-                  roles.map((role, index) => (
+                ) : filteredRoles.length > 0 ? (
+                  filteredRoles.map((role, index) => (
                     <tr key={role._id}>
                       <td>{index + 1}</td>
                       <td>{role.name}</td>
@@ -253,37 +263,29 @@ const Roleread = () => {
                           <button
                             className="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal"
                             type="button"
-                            id="order-dropdown-0"
                             data-bs-toggle="dropdown"
-                            data-boundary="viewport"
                             aria-haspopup="true"
                             aria-expanded="false"
                           >
                             <span className="fas fa-ellipsis-h fs-10"></span>
                           </button>
-                          <div
-                            className="dropdown-menu dropdown-menu-end border py-0"
-                            aria-labelledby="order-dropdown-0"
-                          >
+                          <div className="dropdown-menu dropdown-menu-end border py-0">
                             <div className="py-2">
                               <Link
                                 className="dropdown-item"
-                                href="#!"
                                 onClick={() => openModal(role)}
                               >
                                 Update
                               </Link>
                               <Link
                                 className="dropdown-item"
-                                href="#!"
-                                onClick={() => openViewModal(role)} // Open view modal
+                                onClick={() => openViewModal(role)}
                               >
                                 View
                               </Link>
                               <div className="dropdown-divider"></div>
                               <Link
                                 className="dropdown-item text-danger"
-                                href="#!"
                                 onClick={() => handleDelete(role._id)}
                               >
                                 Delete

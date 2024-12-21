@@ -15,6 +15,7 @@ const Roomtype = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [viewRoomtype, setViewRoomtype] = useState(null); // State for viewing roomtype details
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
 
   // Fetch roomtypes from the backend
   const fetchRoomtypes = async () => {
@@ -37,6 +38,15 @@ const Roomtype = () => {
     const { name, value } = e.target;
     setRoomtypeData({ ...roomtypeData, [name]: value });
   };
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value.toLowerCase());
+  };
+
+  // Filtered roomtypes based on search query
+  const filteredRoomtypes = roomtypes.filter((roomtype) =>
+    roomtype.type.toLowerCase().includes(searchQuery)
+  );
 
   // Add new roomtype
   const addRoomtype = async (e) => {
@@ -223,6 +233,8 @@ const updateRoomtype = async (e) => {
                   type="search"
                   placeholder="Search..."
                   aria-label="Search"
+                  value={searchQuery}
+                  onChange={handleSearch}
                 />
                 <span className="fas fa-search search-box-icon" />
               </form>
@@ -252,14 +264,14 @@ const updateRoomtype = async (e) => {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+              {loading ? (
                   <tr>
                     <td colSpan="5" className="text-center">
                       Loading...
                     </td>
                   </tr>
-                ) : roomtypes.length > 0 ? (
-                  roomtypes.map((roomtype, index) => (
+                ) : filteredRoomtypes.length > 0 ? (
+                  filteredRoomtypes.map((roomtype, index) => (
                     <tr key={roomtype._id}>
                       <td>{index + 1}</td>
                       <td>{roomtype.type}</td>
@@ -293,7 +305,7 @@ const updateRoomtype = async (e) => {
                               <Link
                                 className="dropdown-item"
                                 href="#!"
-                                onClick={() => openViewModal(roomtype)} // Open view modal
+                                onClick={() => openViewModal(roomtype)}
                               >
                                 View
                               </Link>

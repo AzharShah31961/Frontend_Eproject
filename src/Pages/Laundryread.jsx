@@ -16,7 +16,7 @@ const LaundryRead = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // Add/Update modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false); // View modal
   const [isUpdate, setIsUpdate] = useState(false); // Track if the modal is for update
-
+  const [searchQuery, setSearchQuery] = useState(""); 
   // Fetch laundry items data
   const fetchLaundryItems = async () => {
     try {
@@ -28,6 +28,18 @@ const LaundryRead = () => {
       setLoading(false);
     }
   };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value.toLowerCase());
+  };
+
+  // Filter laundry items based on the search query
+  const filteredLaundryItems = laundryItems.filter(
+    (item) =>
+      item.object.toLowerCase().includes(searchQuery) ||
+      item.category.toLowerCase().includes(searchQuery) ||
+      item.pricing.toString().includes(searchQuery)
+  );
 
   useEffect(() => {
     fetchLaundryItems();
@@ -220,6 +232,8 @@ const LaundryRead = () => {
                   type="search"
                   placeholder="Search..."
                   aria-label="Search"
+                  value={searchQuery}
+                  onChange={handleSearchChange} // Bind to search query
                 />
                 <span className="fas fa-search search-box-icon" />
               </form>
@@ -250,14 +264,14 @@ const LaundryRead = () => {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+              {loading ? (
                   <tr>
                     <td colSpan="5" className="text-center">
                       Loading...
                     </td>
                   </tr>
-                ) : laundryItems.length > 0 ? (
-                  laundryItems.map((item, index) => (
+                ) : filteredLaundryItems.length > 0 ? (
+                  filteredLaundryItems.map((item, index) => (
                     <tr key={item._id}>
                       <td>{index + 1}</td>
                       <td>{item.object}</td>
@@ -268,34 +282,28 @@ const LaundryRead = () => {
                           <button
                             className="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal"
                             type="button"
-                            id="laundry-dropdown-0"
                             data-bs-toggle="dropdown"
-                            aria-haspopup="true"
-                            aria-expanded="false"
                           >
                             <span className="fas fa-ellipsis-h fs-10"></span>
                           </button>
-                          <div
-                            className="dropdown-menu dropdown-menu-end border py-0"
-                            aria-labelledby="laundry-dropdown-0"
-                          >
+                          <div className="dropdown-menu dropdown-menu-end border py-0">
                             <div className="py-2">
                               <Link
                                 className="dropdown-item"
-                                onClick={() => openUpdateModal(item)} // Open update modal
+                                onClick={() => openUpdateModal(item)}
                               >
                                 Update
                               </Link>
                               <Link
                                 className="dropdown-item"
-                                onClick={() => openViewModal(item)} // Open view modal
+                                onClick={() => openViewModal(item)}
                               >
                                 View
                               </Link>
                               <div className="dropdown-divider"></div>
                               <Link
                                 className="dropdown-item text-danger"
-                                onClick={() => handleDelete(item._id)} // Delete laundry item
+                                onClick={() => handleDelete(item._id)} // Corrected
                               >
                                 Delete
                               </Link>

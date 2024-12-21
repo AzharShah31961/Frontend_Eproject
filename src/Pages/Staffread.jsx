@@ -20,6 +20,8 @@ const Staffread = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    // Search query state
+    const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch staff and roles
   const fetchStaff = async () => {
@@ -48,6 +50,20 @@ const Staffread = () => {
     }
   };
 
+
+    // Handle search query change
+    const handleSearchChange = (e) => {
+      setSearchQuery(e.target.value);
+    };
+  
+    // Filtered staff based on search query
+    const filteredStaff = staff.filter((member) =>
+      member.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.cnic.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.role?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   const fetchRoles = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/role/");
@@ -320,6 +336,8 @@ const Staffread = () => {
                   type="search"
                   placeholder="Search..."
                   aria-label="Search"
+                  value={searchQuery}
+                  onChange={handleSearchChange} // Update the search query
                 />
                 <span className="fas fa-search search-box-icon" />
               </form>
@@ -351,14 +369,16 @@ const Staffread = () => {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+              {loading ? (
                   <tr>
-                    <td colSpan="7" className="text-center">
-                      Loading...
-                    </td>
+                    <td colSpan="7">Loading...</td>
                   </tr>
-                ) : staff.length > 0 ? (
-                  staff.map((member, index) => (
+                ) : filteredStaff.length === 0 ? (
+                  <tr>
+                    <td colSpan="7">No staff found</td>
+                  </tr>
+                ) : (
+                  filteredStaff.map((member, index) => (
                     <tr key={member._id}>
                       <td>{index + 1}</td>
                       <td>{member.username}</td>
@@ -386,21 +406,22 @@ const Staffread = () => {
                             <div className="py-2">
                               <Link
                                 className="dropdown-item"
-                                onClick={() => openModal(member)} // Open update modal
-                              >
-                                Update
-                              </Link>
-                              <Link
-                                className="dropdown-item"
-                                onClick={() => openViewModal(member)} // Open view modal
+                                onClick={() => openViewModal(member)}
+                                to="#"
                               >
                                 View
                               </Link>
-                              <div className="dropdown-divider"></div>
                               <Link
-                                className="dropdown-item text-danger"
-                                href="#!"
-                                onClick={() => handleDelete(member._id)} // Delete user on click
+                                className="dropdown-item"
+                                onClick={() => openModal(member)}
+                                to="#"
+                              >
+                                Edit
+                              </Link>
+                              <Link
+                                className="dropdown-item"
+                                onClick={() => handleDelete(member._id)}
+                                to="#"
                               >
                                 Delete
                               </Link>
@@ -410,12 +431,6 @@ const Staffread = () => {
                       </td>
                     </tr>
                   ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center">
-                      No staff available.
-                    </td>
-                  </tr>
                 )}
               </tbody>
             </table>

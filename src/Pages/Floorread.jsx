@@ -3,7 +3,6 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link } from "react-router-dom";
-
 const Floorread = () => {
   const [floors, setFloors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,15 +17,31 @@ const Floorread = () => {
 
   // Fetch floors from the backend
   const fetchFloors = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/floor/");
-      setFloors(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching floors:", error);
-      setLoading(false);
+  try {
+    const response = await axios.get("http://localhost:5000/api/floor/");
+    console.log("Fetched floors:", response.data); // Add this line for debugging
+    setFloors(response.data);
+    setLoading(false);
+
+    // Automatically set the next floor number
+    if (response.data.length > 0) {
+      const lastFloor = response.data[response.data.length - 1];
+      setFloorData((prevData) => ({
+        ...prevData,
+        number: lastFloor.number + 1, // Automatically set to the next sequential number
+      }));
+    } else {
+      setFloorData((prevData) => ({
+        ...prevData,
+        number: 1, // If no floors exist, set the first floor as number 1
+      }));
     }
-  };
+  } catch (error) {
+    console.error("Error fetching floors:", error);
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchFloors();
@@ -37,8 +52,6 @@ const Floorread = () => {
     const { name, value } = e.target;
     setFloorData({ ...floorData, [name]: value });
   };
-
-  // Add new floor
   const addFloor = async (e) => {
     e.preventDefault();
     try {
@@ -47,35 +60,39 @@ const Floorread = () => {
         floorData
       );
       toast.success("Floor added successfully!");
-      fetchFloors();
-      setFloorData({ number: "", available: "yes", limit: "" });
-      setIsModalOpen(false);
+      fetchFloors(); // Refetch floors to get the updated list
+      setFloorData({ number: "", available: "yes", limit: "" }); // Reset form fields
+      setIsModalOpen(false); // Close modal
     } catch (error) {
-      console.error(
-        "Error creating floor:",
-        error.response ? error.response.data : error.message
-      );
-      toast.error("An error occurred while adding the floor.");
+      console.error("Error creating floor:", error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || "An error occurred while adding the floor.";
+      toast.error(errorMessage);
     }
   };
+  
+
+
+  
+  
 
   // Update existing floor
   const updateFloor = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/floor/update/${floorData._id}`,
+        `http://localhost:5000/api/floor/update/${floorData._id}`, // Make sure _id is passed
         floorData
       );
       toast.success("Floor updated successfully!");
-      fetchFloors();
-      setFloorData({ number: "", available: "yes", limit: "" });
-      setIsModalOpen(false);
+      fetchFloors(); // Refetch updated floors list
+      setFloorData({ number: "", available: "yes", limit: "" }); // Reset form fields
+      setIsModalOpen(false); // Close modal
     } catch (error) {
       console.error("Error updating floor:", error);
       toast.error("An error occurred while updating the floor.");
     }
   };
+  
 
   // Delete floor
   const handleDelete = async (floorId) => {
@@ -94,14 +111,15 @@ const Floorread = () => {
   // Open modal for adding or updating a floor
   const openModal = (floor = null) => {
     if (floor) {
-      setIsUpdate(true);
-      setFloorData(floor);
+      setIsUpdate(true); // Set update mode to true
+      setFloorData(floor); // Set floor data for updating
     } else {
-      setIsUpdate(false);
+      setIsUpdate(false); // Set to add mode
       setFloorData({ number: "", available: "yes", limit: "" });
     }
-    setIsModalOpen(true);
+    setIsModalOpen(true); // Open modal
   };
+  
 
   // Open modal for viewing floor details
   const openViewModal = (floor) => {
